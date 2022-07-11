@@ -7,12 +7,72 @@ const { Product, Category, Tag, ProductTag } = require('../../models');
 router.get('/', (req, res) => {
   // find all products
   // be sure to include its associated Category and Tag data
-});
+  Comment.findAll({
+    include: [
+      // include the Category model here:
+      {
+        model: Category,
+        attributes: ['categoy_name'],
+      },
+      {
+        model: ProductTag,
+        attributes: ['tag_id'],
+          include: {
+            model: Tag,
+            attributes: ['tag_name']
+          }
+      }
+    ]
+   })
+    .then(dbCommentData => res.json(dbCommentData))
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    })});
 
 // get one product
 router.get('/:id', (req, res) => {
   // find a single product by its `id`
   // be sure to include its associated Category and Tag data
+  Product.findOne({
+    where: {
+      id: req.params.id
+    },
+    attributes: [
+      'id',
+      'product_name',
+      'price',
+      'stock',
+      //EXAMPLE PLACEHOLDER: [sequelize.literal('(SELECT COUNT(*) FROM ex WHERE a.id=b.id)')]
+    ], 
+    
+    include: [
+      // include the Category model here:
+      {
+        model: Category,
+        attributes: ['categoy_name'],
+      },
+      {
+        model: ProductTag,
+        attributes: ['tag_id'],
+          include: {
+            model: Tag,
+            attributes: ['tag_name']
+          }
+      }
+    ]
+  })
+    .then(dbPostData => {
+      if (!dbPostData) {
+        res.status(404).json({ message: 'No product found with this id' });
+        return;
+      }
+      res.json(dbPostData);
+    })
+    .catch(err => {
+      console.log(err);
+      res.status(500).json(err);
+    });
 });
 
 // create new product
@@ -98,7 +158,7 @@ router.delete('/:id', (req, res) => {
   })
     .then(dbCommentData => {
       if (!dbCommentData) {
-        res.status(404).json({ message: 'No comment found with this id!' });
+        res.status(404).json({ message: 'No product found with this id!' });
         return;
       }
       res.json(dbCommentData);
